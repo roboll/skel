@@ -1,0 +1,6 @@
+rootProject.name = '{{ .Repo }}'
+
+include '{{ .Repo }}-core'
+include '{{ .Repo }}-app'
+include '{{ .Repo }}-ws'
+include '{{ .Repo }}-rpc'

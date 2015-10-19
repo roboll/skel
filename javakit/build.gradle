@@ -1,0 +1,68 @@
+plugins {
+    id 'io.kitkit.base' version '0.9.27'
+}
+
+allprojects {
+    group = 'io.kitkit.{{ .Repo }}'
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+        kitkit()
+    }
+
+    dependencies {
+        testCompile 'junit:junit:4.12'
+    }
+
+    publishing {
+        repositories {
+            kitkit()
+        }
+        publications {
+            standard()
+        }
+    }
+}
+
+project('{{ .Repo }}-core') {
+    dependencies {
+        //deps
+    }
+}
+
+/*
+project('{{ .Repo }}-app') {
+    apply plugin: 'io.kitkit.app'
+    mainClassName = 'io.kitkit.{{ .Repo }}.app.App'
+
+    docker {
+        name "{{ .Owner }}/{{ .Repo }}-app:${project.version}"
+        dockerfile 'Dockerfile'
+        dependsOn tasks.distTar
+    }
+}
+
+project('{{ .Repo }}-ws') {
+    apply plugin: 'io.kitkit.app'
+    mainClassName = 'io.kitkit.{{ .Repo }}.ws.App'
+
+    docker {
+        name "{{ .Owner }}/{{ .Repo }}-ws:${project.version}"
+        dockerfile 'Dockerfile'
+        dependsOn tasks.distTar
+    }
+}
+
+project('{{ .Repo }}-rpc') {
+    apply plugin: 'io.kitkit.app'
+    mainClassName = 'io.kitkit.{{ .Repo }}.rpc.App'
+
+    docker {
+        name "{{ .Owner }}/{{ .Repo }}-rpc:${project.version}"
+        dockerfile 'Dockerfile'
+        dependsOn tasks.distTar
+    }
+}
+*/
