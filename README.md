@@ -27,13 +27,20 @@ When pulling from github, the following options are relevant.
 --gh-owner "roboll"  github owner
 --gh-repo "skel"     github repo
 --gh-tag "latest"    release tag
---name               template to pull - name of release artifact (no extension)
+--skel               template to pull - name of release artifact (no extension)
+--name               name (replaces `skel` in dir names, and in templates as .name)
 --dest               path to place project
 ```
 
 When using a source directory, use `--src "{path}"`.
 
 For full documentation, `skel --help`.
+
+## templates
+
+Templates use standard go templating, with values from a `map[string]string`
+unmarshalled from yaml files. In addition, the word `skel` in any directory
+name will be replaced by the value of the `--name` arg.
 
 ## simple example
 

@@ -3,7 +3,7 @@ plugins {
 }
 
 allprojects {
-    group = 'io.kitkit.{{ .Repo }}'
+    group = 'io.kitkit.{{ .name }}'
 }
 
 subprojects {
@@ -26,43 +26,41 @@ subprojects {
     }
 }
 
-project('{{ .Repo }}-core') {
+project('{{ .name }}-core') {
     dependencies {
         //deps
     }
 }
 
-/*
-project('{{ .Repo }}-app') {
+project('{{ .name }}-app') {
     apply plugin: 'io.kitkit.app'
-    mainClassName = 'io.kitkit.{{ .Repo }}.app.App'
+    mainClassName = 'io.kitkit.{{ .name }}.App'
 
     docker {
-        name "{{ .Owner }}/{{ .Repo }}-app:${project.version}"
+        name "{{ .owner }}/{{ .name }}-app:${project.version}"
         dockerfile 'Dockerfile'
         dependsOn tasks.distTar
     }
 }
 
-project('{{ .Repo }}-ws') {
+project('{{ .name }}-ws') {
     apply plugin: 'io.kitkit.app'
-    mainClassName = 'io.kitkit.{{ .Repo }}.ws.App'
+    mainClassName = 'io.kitkit.{{ .name }}.ws.App'
 
     docker {
-        name "{{ .Owner }}/{{ .Repo }}-ws:${project.version}"
+        name "{{ .owner }}/{{ .name }}-ws:${project.version}"
         dockerfile 'Dockerfile'
         dependsOn tasks.distTar
     }
 }
 
-project('{{ .Repo }}-rpc') {
+project('{{ .name }}-rpc') {
     apply plugin: 'io.kitkit.app'
-    mainClassName = 'io.kitkit.{{ .Repo }}.rpc.App'
+    mainClassName = 'io.kitkit.{{ .name }}.rpc.App'
 
     docker {
-        name "{{ .Owner }}/{{ .Repo }}-rpc:${project.version}"
+        name "{{ .owner }}/{{ .name }}-rpc:${project.version}"
         dockerfile 'Dockerfile'
         dependsOn tasks.distTar
     }
 }
-*/

@@ -48,8 +48,13 @@ var flags = []cli.Flag{
 		Usage: "src dir - takes presidence over gh- options",
 	},
 	cli.StringFlag{
-		Name:  "name",
+		Name:  "skel",
 		Usage: "release artifact name",
+	},
+	cli.StringFlag{
+		Name:  "name",
+		Usage: "name",
+		Value: "",
 	},
 	cli.StringFlag{
 		Name:  "gh-tag",
@@ -80,24 +85,26 @@ func run(c *cli.Context) {
 
 	dest := c.String("dest")
 	src := c.String("src")
+
 	if len(src) == 0 {
 		//github
-		name := c.String("name")
+		name := c.String("skel")
 		if len(name) == 0 {
-			log.Fatal("name is required")
+			log.Fatal("skel is required")
 		}
+
 		tag := c.String("gh-tag")
 		owner := c.String("gh-owner")
 		repo := c.String("gh-repo")
 		token := c.String("gh-token")
+
 		gh := github.Github{Token: token}
-		var err error
-		src, err = gh.DownloadRelease(owner, repo, name, tag)
+		dl, err := gh.DownloadRelease(owner, repo, name, tag)
 		if err != nil {
 			log.Fatal(err)
 		}
+		src = dl
 		prefix = os.TempDir() + name
-		//defer os.RemoveAll(*src)
 	} else {
 		prefix = src
 	}
@@ -108,11 +115,11 @@ func run(c *cli.Context) {
 
 	defaultData, err := ioutil.ReadFile(path.Join(src, "skel.yaml"))
 	if err != nil {
-		log.Println("skel: failed to load default data.")
+		log.Println("skel: failed to load default data, ignoring.")
 	} else {
 		err = yaml.Unmarshal(defaultData, &data)
 		if err != nil {
-			log.Println("skel: failed to unmarshal skel.yaml default data.")
+			log.Println("skel: failed to unmarshal skel.yaml, ignoring.")
 		}
 	}
 
@@ -127,7 +134,9 @@ func run(c *cli.Context) {
 		log.Fatalf("skel: unable to parse %s: %s\n", filepath, err)
 	}
 
-	err = tmpl.Template(src, dest, prefix, []string{"skel.yaml"}, data)
+	name := c.String("name")
+	data["name"] = name
+	err = tmpl.Template(src, dest, name, prefix, []string{"skel.yaml"}, data)
 	if err != nil {
 		log.Fatalf("skel: error templating %s: %s\n", filepath, err)
 	}

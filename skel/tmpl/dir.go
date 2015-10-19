@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-func Template(src, dest, prefix string, ignore []string, data interface{}) error {
-	d := &holder{data: data, dest: dest, prefix: prefix, ignore: ignore}
+func Template(src, dest, name, prefix string, ignore []string, data interface{}) error {
+	d := &holder{data: data, dest: dest, name: name, prefix: prefix, ignore: ignore}
 	err := os.MkdirAll(dest, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("template: failed to create %s: %s\n", dest, err)
@@ -23,6 +23,7 @@ func Template(src, dest, prefix string, ignore []string, data interface{}) error
 type holder struct {
 	data   interface{}
 	dest   string
+	name   string
 	prefix string
 	ignore []string
 }
@@ -40,9 +41,12 @@ func (h *holder) handle(loc string, info os.FileInfo, err error) error {
 		}
 	}
 
+	dest := path.Join(h.dest, strings.Replace(loc, h.prefix, "", -1))
+	dest = strings.Replace(dest, "skel", h.name, -1)
+
 	if info.IsDir() {
 		// dir: create empty dir
-		dest := path.Join(h.dest, strings.Replace(loc, h.prefix, "", -1))
+
 		log.Printf("template: creating dir %s\n", dest)
 
 		info, err := os.Stat(dest)
@@ -62,7 +66,6 @@ func (h *holder) handle(loc string, info os.FileInfo, err error) error {
 			log.Printf("template: error loading template %s: %s\n", loc, err)
 		}
 
-		dest := path.Join(h.dest, strings.Replace(loc, h.prefix, "", -1))
 		file, err := os.Create(dest)
 		if err != nil {
 			log.Printf("template: error creating %s: %s\n", path.Join(h.dest, loc), err)
