@@ -48,5 +48,5 @@ See the [go](go) skel for an example.
 
 ```
 go get github.com/roboll/skel
-skel --name go --dest mynewproject
+skel --skel go --name mynewproject --dest mynewproject
 ```
