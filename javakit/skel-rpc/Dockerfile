@@ -1,9 +1,13 @@
+###############################################################################
+# {{ .name}}-rpc
+###############################################################################
 FROM jeanblanchard/java:serverjre-8
 
 RUN apk add --update bash && rm -rf /var/cache/apk/*
 
-ADD ./{{ .Repo }}-rpc-*.tar /dist
+ADD ./{{ .name }}-rpc-*.tar /dist
 
-RUN ln -s /dist/{{ .Repo }}-rpc-* /opt/app
+RUN ln -s /dist/{{ .name }}-rpc-* /opt/app
 
-ENTRYPOINT ["/opt/app/bin/{{ .Repo }}-rpc"]
+EXPOSE 8080
+ENTRYPOINT ["/opt/app/bin/{{ .name }}-rpc"]

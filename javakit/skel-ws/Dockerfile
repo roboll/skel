@@ -1,9 +1,14 @@
+###############################################################################
+# {{ .group }}/{{ .name}}-ws
+###############################################################################
 FROM jeanblanchard/java:serverjre-8
 
 RUN apk add --update bash && rm -rf /var/cache/apk/*
 
-ADD ./{{ .Repo }}-ws-*.tar /dist
+ADD ./{{ .name }}-ws-*.tar /dist
 
-RUN ln -s /dist/{{ .Repo }}-ws-* /opt/app
+RUN ln -s /dist/{{ .name }}-ws-* /opt/app
 
-ENTRYPOINT ["/opt/app/bin/{{ .Repo }}-ws"]
+EXPOSE 8080 8081
+WORKDIR /opt/app
+ENTRYPOINT ["bin/{{ .name }}-ws", "server", "{{ .name }}-ws.yaml"]

@@ -1,9 +1,13 @@
+###############################################################################
+# {{ .name}}-app
+###############################################################################
 FROM jeanblanchard/java:serverjre-8
 
 RUN apk add --update bash && rm -rf /var/cache/apk/*
 
-ADD ./{{ .Repo }}-app-*.tar /dist
+ADD ./{{ .name }}-app-*.tar /dist
 
-RUN ln -s /dist/{{ .Repo }}-app-* /opt/app
+RUN ln -s /dist/{{ .name }}-app-* /opt/app
 
-ENTRYPOINT ["/opt/app/bin/{{ .Repo }}-app"]
+EXPOSE 8080
+ENTRYPOINT ["/opt/app/bin/{{ .name }}-app"]
