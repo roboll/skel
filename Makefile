@@ -12,9 +12,9 @@ GOARCH      := amd64
 PRE_RELEASE := tag clean-repo test
 
 .PHONY:  build docker release
-build:   skel-linux-amd64 go.tar.gz javakit.tar.gz
+build:   skel-linux-amd64 go.tar.gz
 docker:  build #none
-release: $(PRE_RELEASE) docker gh-release-go.tar.gz gh-release-javakit.tar.gz
+release: $(PRE_RELEASE) docker gh-release-go.tar.gz
 
 ###############################################################################
 # pre-release - test and validation
