@@ -2,7 +2,7 @@ OWNER       := roboll
 REPO        := skel
 
 VERSION     := $(shell git describe --tags)
-PROJECT     := github.com/$(OWNER)/$(REPO)
+PROJECT     := $(OWNER)/$(REPO)
 
 REGISTRY    :=
 
@@ -32,12 +32,12 @@ GOARGS  := -a -tags netgo -ldflags '-s -w -X main.release=$(VERSION)'
 %-$(GOOS)-$(GOARCH): $(*D) ;$(GOBUILD) $(GOARGS) -o $@ ./$(*D)
 
 .PHONY: docker-build-root docker-build-%
-docker-build-root: ;docker build -t $(REGISTRY)$(OWNER)/$(REPO):$(VERSION) ./
-docker-build-%:    ;docker build -t $(REGISTRY)$(OWNER)/$(REPO)-$*:$(VERSION) ./$*
+docker-build-root: ;docker build -t $(REGISTRY)$(PROJECT):$(VERSION) ./
+docker-build-%:    ;docker build -t $(REGISTRY)$(PROJECT)-$*:$(VERSION) ./$*
 
 .PHONY: docker-push-root docker-push-%
-docker-push-root: docker-build-root ;docker push $(REGISTRY)$(OWNER)/$(REPO):$(VERSION)
-docker-push-%:    docker-build-%    ;docker push $(REGISTRY)$(OWNER)/$(REPO)-$*:$(VERSION)
+docker-push-root: docker-build-root ;docker push $(REGISTRY)$(PROJECT):$(VERSION)
+docker-push-%:    docker-build-%    ;docker push $(REGISTRY)$(PROJECT)-$*:$(VERSION)
 
 ###############################################################################
 # github-release - upload a binary release to github releases

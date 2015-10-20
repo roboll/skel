@@ -1,6 +1,0 @@
-rootProject.name = '{{ .name }}'
-
-include '{{ .name }}-core'
-include '{{ .name }}-app'
-include '{{ .name }}-ws'
-include '{{ .name }}-rpc'

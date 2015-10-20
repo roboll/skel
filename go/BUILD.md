@@ -19,8 +19,8 @@ api, and pushed to a remote docker registry.
 * `docker-push-%` - pushes the docker image resulting from `docker-build-%`
 * `docker-push-root` - pushes the root docker image
 
-* `create-gh-release` -
-* `%-gh-release` -
+* `create-gh-release` - create a github release associated with the current tag
+* `gh-release-%` - push an artifact to github releases
 
 * `gh-token` - ensures that the env variable `GH_TOKEN` is set
 * `tag` - ensures that the checked out revision is a tag
