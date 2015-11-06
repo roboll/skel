@@ -65,7 +65,7 @@ func Run(config *Config) error {
 
 	prefix := filepath.Dir(*src)
 
-	var data map[string]string
+	var data map[string]string = make(map[string]string)
 
 	defaultData, err := ioutil.ReadFile(path.Join(*src, "skel.yaml"))
 	if err != nil {

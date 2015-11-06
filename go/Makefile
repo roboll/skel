@@ -1,8 +1,8 @@
 ###############################################################################
 # see BUILD.md
 ###############################################################################
-OWNER     := {{ .owner }}
-REPO      := {{ .name }}
+OWNER     := {{{ .owner }}}
+REPO      := {{{ .name }}}
 
 VERSION   := $(shell git describe --tags)
 PROJECT   := $(OWNER)/$(REPO)
@@ -15,7 +15,7 @@ GOARCH    := amd64
 PRE_RELEASE := tag clean-repo test
 
 .PHONY:  build docker release
-build:   {{ .name }}-linux-amd64 #docs.tar.gz
+build:   {{{ .name }}}-linux-amd64 #docs.tar.gz
 docker:  build docker-build-root
 release: $(PRE_RELEASE) docker docker-push-root #docs.tar.gz-gh-release
 

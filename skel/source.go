@@ -60,9 +60,9 @@ func (g *GithubReleaseSource) DataLocation() (*string, error) {
 	}
 
 	gh := github.Github{Token: os.Getenv("GITHUB_TOKEN")}
-	dl, err := gh.DownloadRelease(g.Owner, g.Repo, g.Name, g.Tag)
+	dl, err := gh.DownloadAndExtractRelease(g.Owner, g.Repo, g.Name, g.Tag)
 	if err != nil {
 		return nil, err
 	}
-	return &dl, nil
+	return dl, nil
 }

@@ -2,6 +2,7 @@ package github
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -23,27 +24,51 @@ type Github struct {
 	Token string
 }
 
-func (g *Github) DownloadRelease(owner, repo, name, tag string) (string, error) {
+func (g *Github) DownloadRelease(owner, repo, name, tag string) error {
+	filename, err := g.downloadRelease(owner, repo, name, tag)
+	if err != nil {
+		return err
+	}
+	workdir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	os.Rename(*filename, path.Join(workdir, name+".tar.gz"))
+	return nil
+}
+
+func (g *Github) downloadRelease(owner, repo, name, tag string) (*string, error) {
 	url, err := g.getDownloadUrl(owner, repo, name+".tar.gz", tag)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	filename := path.Join(os.TempDir(), name+".tar.gz")
-	outdir := path.Join(os.TempDir(), name)
 
 	log.Printf("downloading asset to %s\n", filename)
 	err = g.download(*url, filename)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	return &filename, nil
+}
+
+func (g *Github) DownloadAndExtractRelease(owner, repo, name, tag string) (*string, error) {
+	filename, err := g.downloadRelease(owner, repo, name, tag)
+	if err != nil {
+		return nil, err
+	}
+	if filename == nil {
+		return nil, errors.New("Filename came back nil. This is a bug.")
+	}
+	outdir := path.Join(os.TempDir(), name)
 
 	log.Println("extracting asset")
-	err = extractor.NewTgz().Extract(filename, outdir)
+	err = extractor.NewTgz().Extract(*filename, outdir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return outdir, nil
+	return &outdir, nil
 }
 
 func (g *Github) getDownloadUrl(owner, repo, name, tag string) (*string, error) {
