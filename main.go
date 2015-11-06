@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	skel.Run(os.Args)
+	skel.RunCli(os.Args)
 }

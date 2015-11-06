@@ -1,143 +1,135 @@
 package skel
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path"
+	"path/filepath"
+	"strings"
+
+	"github.com/roboll/skel/skel/tmpl"
 
 	"gopkg.in/yaml.v2"
-
-	"github.com/codegangsta/cli"
-	"github.com/roboll/skel/skel/github"
-	"github.com/roboll/skel/skel/tmpl"
 )
 
 var release string
 
-func Run(args []string) {
-	app := cli.NewApp()
+type Config struct {
+	Source Source
+	Dest   string
+	Name   string
 
-	app.Name = "skel"
-	app.Usage = "https://github.com/roboll/skel"
+	Data       map[string]string
+	OpenEditor bool
+}
 
-	if len(release) == 0 {
-		release = "HEAD"
+func (c *Config) validate() error {
+	if c.Source == nil {
+		return errors.New("Source may not be nil.")
 	}
-	app.Version = release
-
-	app.Flags = flags
-	app.Action = run
-
-	app.Run(args)
-}
-
-var flags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "data",
-		Usage: "yaml file with template data",
-		Value: "data.yaml",
-	},
-	cli.StringFlag{
-		Name:  "dest",
-		Usage: "dest dir",
-		Value: "./",
-	},
-	cli.StringFlag{
-		Name:  "src",
-		Usage: "src dir - takes presidence over gh- options",
-	},
-	cli.StringFlag{
-		Name:  "skel",
-		Usage: "release artifact name",
-	},
-	cli.StringFlag{
-		Name:  "name",
-		Usage: "name",
-		Value: "",
-	},
-	cli.StringFlag{
-		Name:  "gh-tag",
-		Usage: "release tag",
-		Value: "latest",
-	},
-	cli.StringFlag{
-		Name:   "gh-owner",
-		Usage:  "github repo owner",
-		Value:  "roboll",
-		EnvVar: "SKEL_OWNER",
-	},
-	cli.StringFlag{
-		Name:   "gh-repo",
-		Usage:  "github repo",
-		Value:  "skel",
-		EnvVar: "SKEL_REPO",
-	},
-	cli.StringFlag{
-		Name:   "gh-token",
-		Usage:  "github api token",
-		EnvVar: "GITHUB_TOKEN",
-	},
-}
-
-func run(c *cli.Context) {
-	var prefix string
-
-	dest := c.String("dest")
-	src := c.String("src")
-
-	if len(src) == 0 {
-		//github
-		name := c.String("skel")
-		if len(name) == 0 {
-			log.Fatal("skel is required")
-		}
-
-		tag := c.String("gh-tag")
-		owner := c.String("gh-owner")
-		repo := c.String("gh-repo")
-		token := c.String("gh-token")
-
-		gh := github.Github{Token: token}
-		dl, err := gh.DownloadRelease(owner, repo, name, tag)
+	if len(c.Dest) == 0 {
+		workdir, err := os.Getwd()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-		src = dl
-		prefix = os.TempDir() + name
-	} else {
-		prefix = src
+		c.Dest = workdir
+		log.Printf("skel: Dest was empty. Using %s.\n", c.Dest)
+	}
+	if len(c.Name) == 0 {
+		idx := strings.LastIndex(c.Dest, "/")
+		c.Name = c.Dest[idx+1 : len(c.Dest)]
+		log.Printf("skel: Name was empty. Using %s.\n", c.Name)
+	}
+	if c.Data == nil {
+		c.Data = make(map[string]string)
+	}
+	return nil
+}
+
+func Run(config *Config) error {
+	if err := config.validate(); err != nil {
+		return err
 	}
 
-	log.Printf("prefix is %s", prefix)
+	src, err := config.Source.DataLocation()
+	if err != nil {
+		return err
+	}
+	if src == nil {
+		return errors.New("skel: Source returned nil pointer, this is a bug.")
+	}
+
+	prefix := filepath.Dir(*src)
 
 	var data map[string]string
 
-	defaultData, err := ioutil.ReadFile(path.Join(src, "skel.yaml"))
+	defaultData, err := ioutil.ReadFile(path.Join(*src, "skel.yaml"))
 	if err != nil {
-		log.Println("skel: failed to load default data, ignoring.")
+		log.Println("skel: Failed to load default data from template's skel.yaml, ignoring.")
 	} else {
 		err = yaml.Unmarshal(defaultData, &data)
 		if err != nil {
-			log.Println("skel: failed to unmarshal skel.yaml, ignoring.")
+			log.Println("skel: Failed to unmarshal template's skel.yaml, ignoring.")
 		}
 	}
 
-	filepath := c.String("data")
-	content, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		log.Printf("skel: couldn't read data file %s: %s\n", filepath, err)
+	for key, val := range config.Data {
+		data[key] = val
+	}
+	data["name"] = config.Name
+
+	if config.OpenEditor {
+		err := doEditData(config, data)
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Println("OpenEditor was false.")
 	}
 
+	if err := tmpl.Template(*src, config.Dest, config.Name, prefix, []string{"skel.yaml"}, data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func doEditData(config *Config, data map[string]string) error {
+	path := path.Join(os.TempDir(), "skel-data.yaml")
+	tmp, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("Failed to open temp file for editing: %s.", err)
+	}
+	out, err := yaml.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("Failed to write data to tempfile: %s.", err)
+	}
+	if _, err := tmp.Write(out); err != nil {
+		return fmt.Errorf("Failed to write data to tempfile: %s.", err)
+	}
+	tmp.Close()
+
+	cmd := exec.Command(os.Getenv("EDITOR"), path)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("Failed to open $EDITOR: %s.", err)
+	}
+	if err := cmd.Wait(); err != nil {
+		return fmt.Errorf("Failed to wait for $EDITOR to close: %s.", err)
+	}
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("Failed to read data file after editing: %s.", err)
+	}
 	err = yaml.Unmarshal(content, &data)
 	if err != nil {
-		log.Fatalf("skel: unable to parse %s: %s\n", filepath, err)
+		return fmt.Errorf("Failed to unmarshall yaml content after editing: %s.", err)
 	}
-
-	name := c.String("name")
-	data["name"] = name
-	err = tmpl.Template(src, dest, name, prefix, []string{"skel.yaml"}, data)
-	if err != nil {
-		log.Fatalf("skel: error templating %s: %s\n", filepath, err)
-	}
+	return nil
 }

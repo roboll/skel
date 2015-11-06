@@ -3,12 +3,12 @@ package tmpl
 import (
 	"bufio"
 	"fmt"
-	"html/template"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"text/template"
 )
 
 func Template(src, dest, name, prefix string, ignore []string, data interface{}) error {
@@ -36,7 +36,7 @@ func (h *holder) handle(loc string, info os.FileInfo, err error) error {
 
 	for _, str := range h.ignore {
 		if info.Name() == str {
-			log.Printf("found ignore match %s, skipping.\n", str)
+			log.Printf("template: found ignore match %s, skipping.\n", str)
 			return nil
 		}
 	}
@@ -46,7 +46,6 @@ func (h *holder) handle(loc string, info os.FileInfo, err error) error {
 
 	if info.IsDir() {
 		// dir: create empty dir
-
 		log.Printf("template: creating dir %s\n", dest)
 
 		info, err := os.Stat(dest)
@@ -61,9 +60,12 @@ func (h *holder) handle(loc string, info os.FileInfo, err error) error {
 	} else {
 		// file: template file to dest
 		log.Printf("template: processing %s", loc)
-		tmpl, err := template.ParseFiles(loc)
+		tmpl, err := template.New(filepath.Base(loc)).Delims("{{{", "}}}").ParseFiles(loc)
 		if err != nil {
 			log.Printf("template: error loading template %s: %s\n", loc, err)
+		}
+		if tmpl == nil {
+			log.Printf("template: error while processing template %s.\n", loc)
 		}
 
 		file, err := os.Create(dest)
