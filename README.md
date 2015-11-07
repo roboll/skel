@@ -29,7 +29,7 @@ For full documentation, `skel --help`.
 
 ## templates
 
-Templates use standard go templating, with modified delimiters to avoid collissions with existing templating. (`{{{` and `}}}`) In addition, the name of the skel in any file or directory names will be changed to the `--name` argument. (i.e. in a skel named template, using `--name mytempllate`, a directory named template will end up named mytemplate).
+Templates use standard go templating, with modified delimiters to avoid collissions with existing templating. (`{{{` and `}}}`) In addition, the name skel in any file or directory names will be changed to the `--name` argument. (i.e. in a skel named template, using `--name mytempllate`, a directory named skel will end up named mytemplate).
 
 ## simple example
 
