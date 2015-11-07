@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/roboll/skel/skel/tmpl"
@@ -63,7 +62,7 @@ func Run(config *Config) error {
 		return errors.New("skel: Source returned nil pointer, this is a bug.")
 	}
 
-	prefix := filepath.Dir(*src)
+	prefix := *src
 
 	var data map[string]string = make(map[string]string)
 
