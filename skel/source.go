@@ -8,7 +8,8 @@ import (
 )
 
 type Source interface {
-	DataLocation() (*string, error)
+	GetLocation() (*string, error)
+	Cleanup() error
 }
 
 type DirectorySource struct {
@@ -20,9 +21,11 @@ type GithubReleaseSource struct {
 	Owner string
 	Repo  string
 	Name  string
+
+	path *string
 }
 
-func (s *DirectorySource) DataLocation() (*string, error) {
+func (s *DirectorySource) GetLocation() (*string, error) {
 	//trim trailing slash if it has one
 	for len(s.Path) > 0 && s.Path[len(s.Path)-1] == '/' {
 		s.Path = s.Path[0 : len(s.Path)-1]
@@ -36,6 +39,10 @@ func (s *DirectorySource) DataLocation() (*string, error) {
 		return nil, errors.New("DirectorySource: Path must be a directory.")
 	}
 	return &s.Path, nil
+}
+
+func (s *DirectorySource) Cleanup() error {
+	return nil
 }
 
 func (g *GithubReleaseSource) validate() error {
@@ -54,7 +61,7 @@ func (g *GithubReleaseSource) validate() error {
 	return nil
 }
 
-func (g *GithubReleaseSource) DataLocation() (*string, error) {
+func (g *GithubReleaseSource) GetLocation() (*string, error) {
 	if err := g.validate(); err != nil {
 		return nil, err
 	}
@@ -64,5 +71,13 @@ func (g *GithubReleaseSource) DataLocation() (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+	g.path = dl
 	return dl, nil
+}
+
+func (g *GithubReleaseSource) Cleanup() error {
+	if g.path == nil {
+		return errors.New("GithubReleaseSource: need to call GetLocation before Cleanup.")
+	}
+	return os.RemoveAll(*g.path)
 }

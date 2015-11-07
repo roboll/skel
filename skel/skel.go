@@ -54,13 +54,14 @@ func Run(config *Config) error {
 		return err
 	}
 
-	src, err := config.Source.DataLocation()
+	src, err := config.Source.GetLocation()
 	if err != nil {
 		return err
 	}
 	if src == nil {
 		return errors.New("skel: Source returned nil pointer, this is a bug.")
 	}
+	defer config.Source.Cleanup()
 
 	prefix := *src
 
