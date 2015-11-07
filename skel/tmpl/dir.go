@@ -74,6 +74,10 @@ func (h *holder) handle(loc string, info os.FileInfo, err error) error {
 		}
 		defer file.Close()
 
+		if err := file.Chmod(info.Mode()); err != nil {
+			log.Printf("template: failed to set permissions on %s: %s", file.Name(), err)
+		}
+
 		writer := bufio.NewWriter(file)
 		err = tmpl.Execute(writer, h.data)
 		defer writer.Flush()
