@@ -88,10 +88,10 @@ func Run(config *Config) error {
 			return err
 		}
 	} else {
-		log.Println("OpenEditor was false.")
+		log.Println("skel: OpenEditor was false, not editing.")
 	}
 
-	if err := tmpl.Template(*src, config.Dest, config.Name, prefix, []string{"skel.yaml"}, data); err != nil {
+	if err := tmpl.Template(*src, config.Dest, data["name"], prefix, []string{"skel.yaml"}, data); err != nil {
 		return err
 	}
 
